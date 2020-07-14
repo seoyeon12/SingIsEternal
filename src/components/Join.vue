@@ -21,24 +21,30 @@ export default {
     },
     methods: {
         join() {
-            firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
-            .then(() => {
-                alert('회원가입 되었습니다.');
-                this.$router.push("/login");
-            })
-            .catch(function(error) {
-                // Handle Errors here.
-                var errorCode = error.code;
-                var errorMessage = error.message;
-                if (errorCode == 'auth/weak-password') {
-                    alert('비밀번호가 많이 취약합니다... 다시 입력해주세요!!');
-                } else {
-                    alert(errorMessage);
-                }
-                console.log(error);
-            });
-        // console.log(this.email," : ",typeof(this.email));
-        // console.log(this.password," : ",typeof(this.password));
+            var regExp = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
+            
+            if(this.email == "" || this.password == ""){
+                alert("이메일 또는 비밀번호를 입력해주세요!!");
+            }else if(regExp.test(this.email) == false){
+                alert("이메일 형식이 올바르지 않습니다.");
+            }else{
+                firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
+                .then(() => {
+                    alert('회원가입 되었습니다.');
+                    this.$router.push("/login");
+                })
+                .catch(function(error) {
+                    // Handle Errors here.
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    if (errorCode == 'auth/weak-password') {
+                        alert('비밀번호가 많이 취약합니다... 다시 입력해주세요!!');
+                    } else {
+                        alert(errorMessage);
+                    }
+                    console.log(error);
+                });
+            }
         }
     }
 }
