@@ -1,6 +1,6 @@
 <template>
   <div>
-      <button id="toggle_btn" v-bind:class="[isActive ? 'show' : 'hide']" @click="toggleClass()">교통정보</button>
+      <button id="toggle_btn" v-bind:class="[isActive ? 'show' : 'hide']" @click="toggleClass()">교통정보 보기</button>
       <button id="reserch_btn" @click="clikckReloaad()">현 지도 기준 재검색</button>
       <span id="datetime_now">  현재 {{ hour }}시 {{ minute }}분입니다. </span>
 
