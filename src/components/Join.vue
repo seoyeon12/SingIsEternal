@@ -31,16 +31,19 @@ export default {
                 firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
                 .then(() => {
                     alert('회원가입 되었습니다.');
+                    sessionStorage.clear();
                     this.$router.push("/login");
                 })
                 .catch(function(error) {
                     // Handle Errors here.
                     var errorCode = error.code;
-                    var errorMessage = error.message;
                     if (errorCode == 'auth/weak-password') {
                         alert('비밀번호가 많이 취약합니다... 다시 입력해주세요!!');
-                    } else {
-                        alert(errorMessage);
+                    } else if (errorCode == 'email-already-in-use') {
+                        alert('이미 존재하는 메일입니다.');
+                    }else {
+                        alert('회원가입에 실패하셨습니다. 다시 시도해주세요.');
+                        console.log(errorCode);
                     }
                     console.log(error);
                 });
