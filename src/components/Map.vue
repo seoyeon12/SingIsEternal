@@ -20,19 +20,17 @@ export default {
     return {
       isActive: false,
       map: null,
-      lat: 36.871400,
-      lon: 128.601400,
+      lat: 36.871400, // 현 위치 (기본값 : 36.871400)
+      lon: 128.601400, // 현 위치 (기본값 : 128.601400)
       error: '',
-      keyword: '동전노래방',
-      infowindow: '',
-      markers: {},
-      nowMarker: null,
-      hour: 0,
-      minute: 0,
-      openHour: 23,
-      openMinute: 0,
-      closeHour: 3,
-      closeMinute: 0
+      keyword: '동전노래방', // 검색 키워드
+      infowindow: '', // 인포윈도우
+      markers: {}, // 검색 결과 마커
+      nowMarker: null, // 현 위치 마커
+      hour: 0, // 현 시간
+      minute: 0, // 현 분
+      openHour: 23, // 오픈 시간 (기본값 : 23)
+      closeHour: 3, // 닫는 시간 (기본값 : 3)
     }
   },
   mounted () {
@@ -47,6 +45,7 @@ export default {
     }
   },
   methods: {
+    // 1
     // Map Init Methods
     initMap () {
       // console.log(this.lat, this.lon)
@@ -69,6 +68,7 @@ export default {
       }
       this.map = new kakao.maps.Map(container, options)
     },
+    // 2 (geolocation가 지원된다면)
     // 현재 위치 지도 Center 설정 Methods
     showPosition (position) {
       this.lat = position.coords.latitude
@@ -76,34 +76,55 @@ export default {
 
       this.map.setCenter(new kakao.maps.LatLng(this.lat, this.lon))
       this.getTime() // 현재 시간 세팅
-      this.displayMarker(this.lat, this.lon)
-      this.singingRoom()
+      this.displayMarker(this.lat, this.lon) // 현재 위치 마커생성 함수
+      this.singingRoom() // 노래방 검색
     },
+    // 3 , (10-1)
+    // 현재 시간 알기
+    getTime () {
+      let today = new Date() 
+      this.hour = today.getHours()
+      this.minute = today.getMinutes()
+      // console.log( "현재 시간 : " + this.hour + ':' + this.minute)
+    },
+    // 4
+    // 현재 위치 마커생성 함수
+    displayMarker (lat, lon) {
+      // console.log("현재위치 : " + lat + lon)
+      this.nowMarker = new kakao.maps.Marker({
+        map: this.map,
+        position: new kakao.maps.LatLng(lat, lon)
+        // position: new kakao.maps.LatLng(35.866172, 128.549906)// TEST Code
+      })
+
+      this.nowMarker.setMap(this.map)
+    },
+    // 5
     // 노래방 검색
     singingRoom () {
       // 장소 검색 객체를 생성
       var ps = new kakao.maps.services.Places()
-      // 검색 결과 목록이나 마커를 클릭했을 때 장소명을 표출할 인포윈도우를 생성
-      this.infowindow = new kakao.maps.InfoWindow({
-        zIndex: 1
-      })
 
-      // console.log(this.lat, this.lon)
       var options = {
         location: new kakao.maps.LatLng(this.lat, this.lon),
         // location: new kakao.maps.LatLng(35.866172, 128.549906), // TEST Code
         useMapCenter: true,
         radius: 2000 // 2km 내외
       }
-      // 장소검색 객체를 통해 키워드로 장소검색을 요청
+
+      // 인포윈도우 생성
+      this.infowindow = new kakao.maps.InfoWindow({zIndex: 1});
+
+      // 장소검색 객체를 통해 키워드로 장소검색을 요청 (성공시 6(placesSearchCB)으로)
       ps.keywordSearch(this.keyword, this.placesSearchCB, options)
     },
+    // 6
     // 장소검색이 완료됐을 때 호출되는 콜백함수
     placesSearchCB (data, status, pagination) {
       if (status === kakao.maps.services.Status.OK) {
-        // 정상적으로 검색이 완료 시 검색 목록과 마커를 표출
+        // 정상적으로 검색이 완료 시 검색 목록과 마커를 표출 (7,displayPlaces)
         this.displayPlaces(data)
-        // 페이지 번호를 표출
+        // 페이지 번호를 표출 (7-1,displayPagination)
         this.displayPagination(pagination)
       } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
         alert('검색 결과가 존재하지 않습니다.')
@@ -111,6 +132,7 @@ export default {
         alert('검색 결과 중 오류가 발생했습니다.')
       }
     },
+    // 7
     // 검색 결과 목록과 마커를 표출 함수
     displayPlaces (places) {
       var listEl = document.getElementById('placesList')
@@ -118,58 +140,64 @@ export default {
       var fragment = document.createDocumentFragment()
       var bounds = new kakao.maps.LatLngBounds()
 
-      // 검색 결과 목록에 추가된 항목을 제거
+      // 검색 결과 목록에 추가된 항목을 제거 (8, removeAllChildNods)
       this.removeAllChildNods(listEl)
-      // 지도에 표시되고 있는 마커를 제거
+      // 지도에 표시되고 있는 마커를 제거 (9, removeMarker)
       this.removeMarker()
+
+      var infoWindowThis = this.infowindow // this.infowindow 설정
+      var mapThis = this.map // this.map 설정
 
       for (var i = 0; i < places.length; i++) {
         // 마커를 생성, 지도 표시
         var placePosition = new kakao.maps.LatLng(places[i].y, places[i].x)
+
         //// 영업시간 TEST Code
           this.openHour = Math.floor(Math.random() * 24) + 1; // 1~24까지 랜덤 시간 발생 시키기
-          // this.openMinute = Math.floor(Math.random() * 59) + 1; // 1~59까지 랜덤 분 발생 시키기
-          this.openMinute = 0
+          // this.openMinute = 0
           this.closeHour = this.openHour + 5; // 오픈 시간 + 5시간
-          // this.closeMinute = this.openMinute - 10; // 오픈 분 - 10분
-          this.closeMinute = 0
+          // this.closeMinute = 0
           if(this.closeHour > 24){ this.closeHour -= 24; } // 24가 넘어갈 시 -24
-          if(this.closeMinute > 60){ this.closeMinute -= 60; } // 60가 넘어갈 시 -60
+          // if(this.closeMinute > 60){ this.closeMinute -= 60; } // 60가 넘어갈 시 -60
         ////
+
+        // 마커를 생성하고 지도 위에 마커를 표시하는 함수 (10, addMarker)
         var marker = this.addMarker(placePosition)
-        var itemEl = this.getListItem(i, places[i]) // 검색 결과 항목 Element를 생성
+        // 검색 결과 항목 Element를 생성 (11, getListItem)
+        var itemEl = this.getListItem(i, places[i]) 
 
         // 검색된 장소 위치를 기준으로 지도 범위를 재설정
         // LatLngBounds 객체에 좌표를 추가
         bounds.extend(placePosition);
 
-        // 마커와 검색결과 항목에 mouseover 시
-        // 해당 장소에 인포윈도우에 장소명을 표시
-        // mouseout 했을 때는 인포윈도우를 닫기
+        // 마커와 검색결과 항목에 mouseover, mouseout 시
+        // 해당 장소에 인포윈도우에 장소명을 표시 및 닫기
         (function (marker, title) {
+          // marker 마우스 오버 아웃 이벤트
           kakao.maps.event.addListener(marker, 'mouseover', function () {
-            // this.displayInfowindow(marker, title); //ERROR
-            var content = '<div style="padding:5px;z-index:1;">' + title + '</div>'
+            
+            // var content = '<div class="infowindows">' + title + '<br>' + this.openHour + ' ~ ' + this.closeHour + '</div>'
 
-            // 만약 indowindow를 못 찾는 거라면?
-            this.infowindow.setContent(content)
-            this.infowindow.open(this.map, marker)
+            var content = '<div class="infowindows">' + title + '</div>'
+            infoWindowThis.setContent(content)
+            infoWindowThis.open(mapThis, marker)
           })
 
           kakao.maps.event.addListener(marker, 'mouseout', function () {
-            this.infowindow.close() // ERROR
+            infoWindowThis.close()
           })
 
+          // 검색목록 마우스 오버 아웃 이벤트
           itemEl.onmouseover = function () {
-            // this.displayInfowindow(marker, title); //ERROR
-            var content = '<div style="padding:5px;z-index:1;">' + title + '</div>'
 
-            this.infowindow.setContent(content)
-            this.infowindow.open(this.map, marker)
+            var content = '<div class="infowindows">' + title + '</div>'
+
+            infoWindowThis.setContent(content)
+            infoWindowThis.open(mapThis, marker)
           }
 
           itemEl.onmouseout = function () {
-            this.infowindow.close() // ERROR
+            infoWindowThis.close() 
           }
         })(marker, places[i].place_name)
 
@@ -183,65 +211,7 @@ export default {
       // 검색된 장소 위치를 기준으로 지도 범위 재설정
       this.map.setBounds(bounds)
     },
-    // 검색결과 항목을 Element로 반환하는 함수입니다
-    getListItem (index, places) {
-      var el = document.createElement('li')
-      //   var itemStr = '<span class="markerbg marker_' + (index + 1) + '"></span>' +
-      //         '<div class="info">' +
-      //         '   <h3>' + places.place_name + '</h3>'
-      var itemStr ='<div class="info"> <h3>' + places.place_name + '</h3>'
-
-      if (places.road_address_name) {
-        itemStr += '    <span>' + places.road_address_name + '</span><br>' +
-                '   <span class="jibun gray">' + places.address_name + '</span>'
-      } else {
-        itemStr += '    <span>' + places.address_name + '</span>'
-      }
-
-      itemStr += '  <span class="tel">' + places.phone + '</span>' +
-            '</div>'
-
-      el.innerHTML = itemStr
-      el.className = 'item'
-
-      return el
-    },
-    // 마커를 생성하고 지도 위에 마커를 표시하는 함수입니다
-    addMarker (position) {
-
-      var imageSrc = 'marker_sing.png'
-      // 마커 이미지 url, 스프라이트 이미지를 사용
-      // TEST CODE
-      // 시간, 분을 넘겨주고 true(영업 중), false(영업 X)를 반환 받는다.
-      if(this.checkOpen()){
-        imageSrc = 'marker_sing.png'
-      }else{
-        imageSrc = 'marker_sing_gray.png'
-      }
-      
-      var imageSize = new kakao.maps.Size(64, 69) // 마커 이미지의 크기
-      var imgOptions = {
-        offset: new kakao.maps.Point(27, 69) // 마커 좌표에 일치시킬 이미지 내에서의 좌표
-      }
-      
-      var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imgOptions)
-      var marker = new kakao.maps.Marker({
-        position: position, // 마커의 위치
-        image: markerImage
-      })
-
-      marker.setMap(this.map) // 지도 위에 마커 표출
-      this.markers.push(marker) // 배열에 생성된 마커 추가
-
-      return marker
-    },
-    // 지도 위에 표시되고 있는 마커를 모두 제거합니다
-    removeMarker () {
-      for (var i = 0; i < this.markers.length; i++) {
-        this.markers[i].setMap(null)
-      }
-      this.markers = []
-    },
+    // 7-1
     // 검색결과 목록 하단에 페이지번호를 표시 함수
     displayPagination (pagination) {
       var paginationEl = document.getElementById('pagination')
@@ -273,21 +243,90 @@ export default {
       }
       paginationEl.appendChild(fragment)
     },
-    // 현재 Error
-    // 검색결과 목록 또는 마커를 클릭 시 호출 함수 인포윈도우 장소명 표시
-    displayInfowindow (marker, title) {
-      var content = '<div style="padding:5px;z-index:1;">' + title + '</div>'
-
-      this.infowindow.setContent(content)
-      this.infowindow.open(this.map, marker)
-    },
+    // 8
     // 검색결과 목록의 자식 Element를 제거 함수
     removeAllChildNods (el) {
       while (el.hasChildNodes()) {
         el.removeChild(el.lastChild)
       }
     },
-    // 교통정보 toggle Methods
+    // 9
+    // 지도 위에 표시되고 있는 마커를 모두 제거
+    removeMarker () {
+      for (var i = 0; i < this.markers.length; i++) {
+        this.markers[i].setMap(null)
+      }
+      this.markers = []
+    },
+    // 10
+    // 마커를 생성하고 지도 위에 마커를 표시하는 함수
+    addMarker (position) {
+      // 마커 이미지 url, 퍼블릭 이미지 사용
+      var imageSrc = 'marker_sing.png'
+      // 시간, 분을 넘겨주고 true(영업 중), false(영업 X)를 반환 받는다.
+      // 10-1, checkOpen 
+      if(this.checkOpen()){
+        imageSrc = 'marker_sing.png'
+      }else{
+        imageSrc = 'marker_sing_gray.png'
+      }
+      
+      var imageSize = new kakao.maps.Size(64, 69) // 마커 이미지의 크기
+      var imgOptions = {
+        offset: new kakao.maps.Point(27, 69) // 마커 좌표에 일치시킬 이미지 내에서의 좌표
+      }
+      
+      var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imgOptions)
+      var marker = new kakao.maps.Marker({
+        position: position, // 마커의 위치
+        image: markerImage
+      })
+
+      marker.setMap(this.map) // 지도 위에 마커 표출
+      this.markers.push(marker) // 배열에 생성된 마커 추가
+
+      return marker
+    },
+    // 10-1
+    // 영업시간에 따른 영업여부 (파라메터 : 닫는 시간)
+    // 영업 중 => return true, 아니면 => return false
+    checkOpen() {
+      // 3
+      this.getTime()
+
+      console.log( "오픈시간 : 닫는시간 " + this.openHour + ':' + this.closeHour)
+      //오픈시간 <= 현시간 <= 닫는시간
+      if(this.openHour <= this.hour && this.hour <= this.closeHour){
+        return true
+      }else{
+        return false
+      }
+    },
+    // 11
+    // 검색결과 항목을 Element로 반환하는 함수
+    getListItem (index, places) {
+      var el = document.createElement('li')
+      //   var itemStr = '<span class="markerbg marker_' + (index + 1) + '"></span>' +
+      //         '<div class="info">' +
+      //         '   <h3>' + places.place_name + '</h3>'
+      var itemStr ='<div class="info"> <h3>' + places.place_name + '</h3>'
+
+      if (places.road_address_name) {
+        itemStr += '    <span>' + places.road_address_name + '</span><br>' +
+                '   <span class="jibun gray">' + places.address_name + '</span>'
+      } else {
+        itemStr += '    <span>' + places.address_name + '</span>'
+      }
+
+      itemStr += '  <span class="tel">' + places.phone + '</span>' +
+            '</div>'
+
+      el.innerHTML = itemStr
+      el.className = 'item'
+
+      return el
+    },
+    // 교통정보 toggle 버튼 클릭 시
     toggleClass () {
       this.isActive = !this.isActive
       if (this.isActive === true) {
@@ -298,19 +337,7 @@ export default {
         console.log("Error::Wasn't Working isActive")
       }
     },
-    // 현재 위치 마커생성 함수
-    displayMarker (lat, lon) {
-      // 마커 생성
-      console.log("현재위치 : " + lat + lon)
-      this.nowMarker = new kakao.maps.Marker({
-        map: this.map,
-        position: new kakao.maps.LatLng(lat, lon)
-        // position: new kakao.maps.LatLng(35.866172, 128.549906)// TEST Code
-      })
-
-      this.nowMarker.setMap(this.map)
-    },
-    // 현 위치로 재검색 버튼클릭 시
+    // 현 위치로 재검색 버튼 클릭 시
     clikckReloaad () {
       // 기존의 있던 중앙 마커 삭제
       this.nowMarker.setMap(null)
@@ -324,33 +351,6 @@ export default {
       this.displayMarker(this.lat, this.lon)
       this.singingRoom()
     },
-    // 현재 시간 조회
-    getTime () {
-      let today = new Date() 
-      this.hour = today.getHours()
-      this.minute = today.getMinutes()
-      console.log( "현재 시간 : " + this.hour + ':' + this.minute)
-    },
-    // 영업시간에 따른 영업여부 (파라메터 : 닫는 시간)
-    // 영업 중 => return true, 아니면 => return false
-    checkOpen() {
-      this.getTime()
-      console.log( "오픈시간 : 닫는시간 " + this.openHour + ':' + this.closeHour)
-      //오픈시간 <= 현시간 <= 닫는시간
-      if(this.openHour <= this.hour && this.hour <= this.closeHour){
-        console.log("INIT HOUR");
-        //오픈분 <= 현 분 <= 닫는분
-        // if(this.openMinute <= this.minute && this.minute <= this.closeMinute){
-        //   console.log("INIT MIN");
-        //   return true
-        // }else{
-        //   return false
-        // }
-        return true
-      }else{
-        return false
-      }
-    }
   }
 }
 </script>
@@ -386,7 +386,7 @@ export default {
 }
 
 .bg_white {
-    background: #fff;
+  background: #fff;
 }
 #menu_wrap hr {
   display: block;
@@ -404,6 +404,7 @@ export default {
 #menu_wrap .option button {
   margin-left: 5px;
 }
+
 #placesList{
   padding: 0;
 }
@@ -427,9 +428,6 @@ export default {
   overflow: hidden;
   white-space: nowrap;
 }
-/* #placesList .item .info {
-  padding: 10px 0 10px 55px;
-} */
 #placesList .info .gray {
   color: #8a8a8a;
 }
@@ -440,14 +438,6 @@ export default {
 #placesList .info .tel {
   color: #009900;
 }
-/* #placesList .item .markerbg {
-  float: left;
-  position: absolute;
-  width: 36px;
-  height: 37px;
-  margin: 10px 0 0 10px;
-  background: url(https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_number_blue.png) no-repeat;
-} */
 
 #pagination {
   margin: 10px auto;
@@ -464,49 +454,11 @@ export default {
   color: #777;
 }
 
-/* #placesList .item .marker_1 {
-    background-position: 0 -10px;
+.infowindows{
+  padding:5px;
+  z-index:1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
-#placesList .item .marker_2 {
-    background-position: 0 -56px;
-}
-#placesList .item .marker_3 {
-    background-position: 0 -102px
-}
-#placesList .item .marker_4 {
-    background-position: 0 -148px;
-}
-#placesList .item .marker_5 {
-    background-position: 0 -194px;
-}
-#placesList .item .marker_6 {
-    background-position: 0 -240px;
-}
-#placesList .item .marker_7 {
-    background-position: 0 -286px;
-}
-#placesList .item .marker_8 {
-    background-position: 0 -332px;
-}
-#placesList .item .marker_9 {
-    background-position: 0 -378px;
-}
-#placesList .item .marker_10 {
-    background-position: 0 -423px;
-}
-#placesList .item .marker_11 {
-    background-position: 0 -470px;
-}
-#placesList .item .marker_12 {
-    background-position: 0 -516px;
-}
-#placesList .item .marker_13 {
-    background-position: 0 -562px;
-}
-#placesList .item .marker_14 {
-    background-position: 0 -608px;
-}
-#placesList .item .marker_15 {
-    background-position: 0 -654px;
-} */
 </style>
