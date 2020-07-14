@@ -21,6 +21,7 @@ export default {
     },
     methods: {
         join() {
+            //이메일 형식 검사 코드
             var regExp = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
             
             if(this.email == "" || this.password == ""){
