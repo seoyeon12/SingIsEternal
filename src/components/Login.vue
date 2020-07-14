@@ -1,7 +1,7 @@
 <template>
     <div class="login">
         <div class="loginForm" v-if="isLogin">
-            <h3>Login</h3>
+            <h3>로그인</h3>
             <input type="text" v-model="email" placeholder="email"><br>
             <input type="password" v-model="password" placeholder="password"><br>
             <button v-on:click="login">로그인</button>
@@ -64,21 +64,25 @@ export default {
             }else{
                 firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
                 .then(() => {
-                    // console.log("####", this);
                     return firebase.auth().signInWithEmailAndPassword(this.email, this.password);
                 })
                 .then(() => {
                     const user = firebase.auth().currentUser;
-                    // console.log(user);
                     this.isLogin = false;
                     sessionStorage.setItem('email', user.email);
                     alert(`로그인 완료 ${user.email}`);
                     this.$router.push("/");
                 })
                 .catch(function(error) {
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    alert(errorMessage + errorCode);
+                    var errorCode = error.code;
+                    // const errorMessage = error.message;
+                    if (errorCode == 'auth/weak-password') {
+                        alert('비밀번호가 많이 취약한데요?... 다시 입력해주세요!!');
+                    } else if(errorCode == 'auth/user-not-found' || errorCode == 'auth/wrong-password') {
+                        alert('이메일 혹은 비밀번호가 틀렸습니다. 확인해주십시오.');
+                    } else {
+                        alert(errorCode);
+                    }
                 });
             }
         }
