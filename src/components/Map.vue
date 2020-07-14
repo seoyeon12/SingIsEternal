@@ -48,7 +48,7 @@ export default {
     // 1
     // Map Init Methods
     initMap () {
-      // console.log(this.lat, this.lon)
+
       this.init()
 
       // Checking the Geolocation
@@ -85,18 +85,14 @@ export default {
       let today = new Date() 
       this.hour = today.getHours()
       this.minute = today.getMinutes()
-      // console.log( "현재 시간 : " + this.hour + ':' + this.minute)
     },
     // 4
     // 현재 위치 마커생성 함수
     displayMarker (lat, lon) {
-      // console.log("현재위치 : " + lat + lon)
       this.nowMarker = new kakao.maps.Marker({
         map: this.map,
         position: new kakao.maps.LatLng(lat, lon)
-        // position: new kakao.maps.LatLng(35.866172, 128.549906)// TEST Code
       })
-
       this.nowMarker.setMap(this.map)
     },
     // 5
@@ -104,27 +100,31 @@ export default {
     singingRoom () {
       // 장소 검색 객체를 생성
       var ps = new kakao.maps.services.Places()
-
+      // 장소 검색 options
+      var bound = this.get_bounds()
       var options = {
         location: new kakao.maps.LatLng(this.lat, this.lon),
-        // location: new kakao.maps.LatLng(35.866172, 128.549906), // TEST Code
-        useMapCenter: true,
-        radius: 2000 // 2km 내외
+        useMapCenter: true, // 현재 적용된 Map의 중심좌표 사용여부
+        page: 5, // 검색할 페이지 개수는 5페이지.
+        bounds: bound // 현재 지도의 level 즉, 확대 정도를 기준으로 검색
+        // radius: 2000 // 2km 내외로 검색
       }
-
       // 인포윈도우 생성
       this.infowindow = new kakao.maps.InfoWindow({zIndex: 1});
-
       // 장소검색 객체를 통해 키워드로 장소검색을 요청 (성공시 6(placesSearchCB)으로)
       ps.keywordSearch(this.keyword, this.placesSearchCB, options)
     },
+    get_bounds () {
+      var bounds = this.map.getBounds();
+      return bounds;
+    },
     // 6
-    // 장소검색이 완료됐을 때 호출되는 콜백함수
+    // 장소검색 완료 시 호출되는 콜백함수
     placesSearchCB (data, status, pagination) {
       if (status === kakao.maps.services.Status.OK) {
-        // 정상적으로 검색이 완료 시 검색 목록과 마커를 표출 (7,displayPlaces)
+        // 검색이 OK 시 검색 목록과 마커 표출 (7,displayPlaces)
         this.displayPlaces(data)
-        // 페이지 번호를 표출 (7-1,displayPagination)
+        // 페이지 번호 표출 (7-1,displayPagination)
         this.displayPagination(pagination)
       } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
         alert('검색 결과가 존재하지 않습니다.')
@@ -133,16 +133,17 @@ export default {
       }
     },
     // 7
-    // 검색 결과 목록과 마커를 표출 함수
+    // 검색 결과 목록과 마커 표출 함수
     displayPlaces (places) {
       var listEl = document.getElementById('placesList')
       var menuEl = document.getElementById('menu_wrap')
       var fragment = document.createDocumentFragment()
-      var bounds = new kakao.maps.LatLngBounds()
+      // (marker에 따른 지도 적용) 
+      // var bounds = new kakao.maps.LatLngBounds()
 
-      // 검색 결과 목록에 추가된 항목을 제거 (8, removeAllChildNods)
+      // 검색 결과 목록에 추가된 항목 제거 (8, removeAllChildNods)
       this.removeAllChildNods(listEl)
-      // 지도에 표시되고 있는 마커를 제거 (9, removeMarker)
+      // 지도에 표시되고 있는 마커 제거 (9, removeMarker)
       this.removeMarker()
 
       var infoWindowThis = this.infowindow // this.infowindow 설정
@@ -154,31 +155,25 @@ export default {
 
         //// 영업시간 TEST Code
           this.openHour = Math.floor(Math.random() * 24) + 1; // 1~24까지 랜덤 시간 발생 시키기
-          // this.openMinute = 0
           this.closeHour = this.openHour + 5; // 오픈 시간 + 5시간
-          // this.closeMinute = 0
           if(this.closeHour > 24){ this.closeHour -= 24; } // 24가 넘어갈 시 -24
-          // if(this.closeMinute > 60){ this.closeMinute -= 60; } // 60가 넘어갈 시 -60
         ////
 
-        // 마커를 생성하고 지도 위에 마커를 표시하는 함수 (10, addMarker)
+        // 마커 생성 및 지도 위 마커표시 함수 (10, addMarker)
         var marker = this.addMarker(placePosition)
-        // 검색 결과 항목 Element를 생성 (11, getListItem)
-        var itemEl = this.getListItem(i, places[i]) 
+        // 검색 결과 항목 Element 생성 함수 (11, getListItem)
+        var itemEl = this.getListItem(i, places[i]);
 
-        // 검색된 장소 위치를 기준으로 지도 범위를 재설정
-        // LatLngBounds 객체에 좌표를 추가
-        bounds.extend(placePosition);
+        // (marker에 따른 지도 적용) 검색된 장소 위치 기준 지도 범위 재설정, LatLngBounds 객체에 좌표 추가
+        // bounds.extend(placePosition);
 
         // 마커와 검색결과 항목에 mouseover, mouseout 시
-        // 해당 장소에 인포윈도우에 장소명을 표시 및 닫기
+        // 해당 장소의 인포윈도우에 장소명을 표시 및 닫기
         (function (marker, title) {
           // marker 마우스 오버 아웃 이벤트
           kakao.maps.event.addListener(marker, 'mouseover', function () {
-            
-            // var content = '<div class="infowindows">' + title + '<br>' + this.openHour + ' ~ ' + this.closeHour + '</div>'
-
             var content = '<div class="infowindows">' + title + '</div>'
+
             infoWindowThis.setContent(content)
             infoWindowThis.open(mapThis, marker)
           })
@@ -189,7 +184,6 @@ export default {
 
           // 검색목록 마우스 오버 아웃 이벤트
           itemEl.onmouseover = function () {
-
             var content = '<div class="infowindows">' + title + '</div>'
 
             infoWindowThis.setContent(content)
@@ -208,17 +202,17 @@ export default {
       listEl.appendChild(fragment)
       menuEl.scrollTop = 0
 
-      // 검색된 장소 위치를 기준으로 지도 범위 재설정
-      this.map.setBounds(bounds)
+      // (marker에 따른 지도 적용) 검색된 장소 위치를 기준으로 지도 범위 재설정
+      // this.map.setBounds(bounds)
     },
     // 7-1
-    // 검색결과 목록 하단에 페이지번호를 표시 함수
+    // 검색결과 목록 하단 페이지번호 표시 함수
     displayPagination (pagination) {
       var paginationEl = document.getElementById('pagination')
       var fragment = document.createDocumentFragment()
       var i
 
-      // 기존에 추가된 페이지번호를 삭제
+      // 기존에 추가된 페이지번호 삭제
       while (paginationEl.hasChildNodes()) {
         paginationEl.removeChild(paginationEl.lastChild)
       }
@@ -244,14 +238,14 @@ export default {
       paginationEl.appendChild(fragment)
     },
     // 8
-    // 검색결과 목록의 자식 Element를 제거 함수
+    // 검색결과 목록의 자식 Element 제거(검색 결과 목록에 추가된 항목 제거) 함수
     removeAllChildNods (el) {
       while (el.hasChildNodes()) {
         el.removeChild(el.lastChild)
       }
     },
     // 9
-    // 지도 위에 표시되고 있는 마커를 모두 제거
+    // 지도 위 표시되고 있는 마커 모두 제거 함수
     removeMarker () {
       for (var i = 0; i < this.markers.length; i++) {
         this.markers[i].setMap(null)
@@ -259,7 +253,7 @@ export default {
       this.markers = []
     },
     // 10
-    // 마커를 생성하고 지도 위에 마커를 표시하는 함수
+    // 마커 생성 및 지도 위 마커 표시 함수
     addMarker (position) {
       // 마커 이미지 url, 퍼블릭 이미지 사용
       var imageSrc = 'marker_sing.png'
@@ -282,7 +276,7 @@ export default {
         image: markerImage
       })
 
-      marker.setMap(this.map) // 지도 위에 마커 표출
+      marker.setMap(this.map) // 지도 위 마커 표출
       this.markers.push(marker) // 배열에 생성된 마커 추가
 
       return marker
@@ -306,9 +300,6 @@ export default {
     // 검색결과 항목을 Element로 반환하는 함수
     getListItem (index, places) {
       var el = document.createElement('li')
-      //   var itemStr = '<span class="markerbg marker_' + (index + 1) + '"></span>' +
-      //         '<div class="info">' +
-      //         '   <h3>' + places.place_name + '</h3>'
       var itemStr ='<div class="info"> <h3>' + places.place_name + '</h3>'
 
       if (places.road_address_name) {
