@@ -37,24 +37,8 @@ export default {
         }
     },
     methods: {
-        /*login() {
-            firebase.auth().onAuthStateChanged(function(user) {
-                if (user) {
-                    // User is signed in.
-                    alert("Succed Login");
-                    console.log("Succed Login");
-                    //console.log(this.email, this.password);
-                    //console.log(user);
-                    // this.saveUserInfo();
-                    this.$router.push('/');
-                    // this.$router.push({ name: "Home" });
-                } else {
-                    // No user is signed in.
-                    alert("UnSucced Login");
-                }
-            });
-        },*/
         login() {
+            //이메일 형식 검사 코드
             var regExp = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
 
             if(this.email == "" || this.password == ""){
@@ -75,7 +59,6 @@ export default {
                 })
                 .catch(function(error) {
                     var errorCode = error.code;
-                    // const errorMessage = error.message;
                     if (errorCode == 'auth/weak-password') {
                         alert('비밀번호가 많이 취약한데요?... 다시 입력해주세요!!');
                     } else if(errorCode == 'auth/user-not-found' || errorCode == 'auth/wrong-password') {
