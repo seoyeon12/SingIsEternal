@@ -27,7 +27,6 @@ export default {
         }
     },
     mounted () {
-        console.log("11111111111111111111111");
         if(sessionStorage.length === 0){
             this.isLogin = true;
             console.log("로그인이 안되어있습니다.");
@@ -56,7 +55,14 @@ export default {
             });
         },*/
         login() {
-            firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
+            var regExp = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
+
+            if(this.email == "" || this.password == ""){
+                alert("이메일 또는 비밀번호를 입력해주세요!!");
+            }else if(regExp.test(this.email) == false){
+                alert("이메일 형식이 올바르지 않습니다.");
+            }else{
+                firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
                 .then(() => {
                     // console.log("####", this);
                     return firebase.auth().signInWithEmailAndPassword(this.email, this.password);
@@ -74,6 +80,7 @@ export default {
                     const errorMessage = error.message;
                     alert(errorMessage + errorCode);
                 });
+            }
         }
     }
 }
