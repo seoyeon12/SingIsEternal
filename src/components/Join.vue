@@ -40,7 +40,7 @@ export default {
                     var errorCode = error.code;
                     if (errorCode == 'auth/weak-password') {
                         alert('비밀번호가 많이 취약합니다... 다시 입력해주세요!!');
-                    } else if (errorCode == 'email-already-in-use') {
+                    } else if (errorCode == 'auth/email-already-in-use') {
                         alert('이미 존재하는 메일입니다.');
                     }else {
                         alert('회원가입에 실패하셨습니다. 다시 시도해주세요.');
