@@ -1,0 +1,10 @@
+var firebaseConfig = {
+  apiKey: "AIzaSyD_TV5LVhncrcqUHbPcsQ5T32MYbshM3No",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "testuser-49e8a",
+  storageBucket: "",
+  messagingSenderId: "86454766357",
+  appId: "1:86454766357:web:0be3273044eab89944371c",
+  measurementId: "G-Y0N37HYBGH"
+};
