@@ -6,16 +6,9 @@ import firebase from 'firebase'
 Vue.config.productionTip = false
 
 // 파이어베이스 설정 Config
-// Info.txt
+// 따로 저장
 var firebaseConfig = {
-  apiKey: "",
-  authDomain: "testuser-49e8a.firebaseapp.com",
-  databaseURL: "https://testuser-49e8a.firebaseio.com",
-  projectId: "",
-  storageBucket: "testuser-49e8a.appspot.com",
-  messagingSenderId: "",
-  appId: "",
-  measurementId: ""
+  ""
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
