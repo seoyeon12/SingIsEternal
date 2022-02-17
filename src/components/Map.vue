@@ -40,7 +40,7 @@ export default {
       const script = document.createElement('script')
       /* global kakao */
       script.onload = () => kakao.maps.load(this.initMap)
-      script.src = 'http://dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=f4593708888a850d18fda43ff85bafc3&libraries=services,clusterer'
+      script.src = 'KAKAOMAP_KEY'
       document.head.appendChild(script)
     }
   },
